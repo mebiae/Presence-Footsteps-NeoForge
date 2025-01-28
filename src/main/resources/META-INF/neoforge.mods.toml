@@ -1,0 +1,31 @@
+modLoader = "javafml"
+loaderVersion = "${loader_version_range}"
+license = "MIT"
+issueTrackerURL = ""
+
+[[mods]]
+modId = "presencefootsteps"
+version = "${version}"
+displayName = "Presence Footsteps (NeoForge)"
+displayURL = ""
+updateJSONURL = ""
+authors = "Hurricaaane, Sollace, Paint_Ninja"
+logoFile="pack.png"
+description = "An overly complicated sound mod, ported to NeoForge."
+
+[[mixins]]
+config="${mod_id}.mixin.json"
+
+[[dependencies.presencefootsteps]]
+modId = "neoforge"
+type = "required"
+versionRange = "${neo_version_range}"
+ordering = "NONE"
+side = "CLIENT"
+
+[[dependencies.presencefootsteps]]
+modId = "minecraft"
+type = "required"
+versionRange = "${minecraft_version}"
+ordering = "NONE"
+side = "CLIENT"
