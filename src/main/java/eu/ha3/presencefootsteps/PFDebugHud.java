@@ -37,7 +37,7 @@ public class PFDebugHud {
         Minecraft client = Minecraft.getInstance();
 
         list.add("");
-        list.add(ChatFormatting.UNDERLINE + "Presence Footsteps " + ModList.get().getModContainerById("presencefootsteps").get().getModInfo().getVersion()); //FabricLoader.getInstance().getModContainer("presencefootsteps").get().getMetadata().getVersion());
+        list.add(ChatFormatting.UNDERLINE + "Presence Footsteps " + ModList.get().getModContainerById("presencefootsteps").get().getModInfo().getVersion());
 
         PFConfig config = engine.getConfig();
         list.add(String.format("Enabled: %s, Multiplayer: %s, Running: %s", config.getEnabled(), config.getEnabledMP(), engine.isRunning(client)));

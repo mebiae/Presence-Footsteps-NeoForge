@@ -18,8 +18,6 @@ import org.lwjgl.glfw.GLFW;
 
 import java.nio.file.Path;
 
-import static eu.ha3.presencefootsteps.PresenceFootsteps.logger;
-
 @EventBusSubscriber(modid = PresenceFootsteps.MOD_ID, bus = EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
 public class ModLifecycleEventSubscriber {
     private static final PresenceFootsteps presenceFootsteps = PresenceFootsteps.getInstance();

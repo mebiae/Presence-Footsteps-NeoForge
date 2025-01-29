@@ -12,11 +12,9 @@ import java.util.stream.Stream;
 import eu.ha3.presencefootsteps.PresenceFootsteps;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.PreparableReloadListener;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import eu.ha3.presencefootsteps.PFConfig;
-import eu.ha3.presencefootsteps.config.EntitySelector;
 import eu.ha3.presencefootsteps.sound.player.ImmediateSoundPlayer;
 import eu.ha3.presencefootsteps.util.PlayerUtil;
 import eu.ha3.presencefootsteps.world.Solver;
