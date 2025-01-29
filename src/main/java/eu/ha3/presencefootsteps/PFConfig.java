@@ -23,10 +23,11 @@ public class PFConfig extends JsonFile {
     private int maxSteppingEntities = 50;
 
     private boolean disabled = false;
-    private boolean firstRun = true;
     private boolean multiplayer = true;
     private boolean global = true;
     private boolean footwear = true;
+    private boolean visualiser = false;
+    private boolean exclusive = false;
 
     private Locomotion stance = Locomotion.NONE;
     private EntitySelector targetEntities = EntitySelector.ALL;
@@ -64,13 +65,8 @@ public class PFConfig extends JsonFile {
         return loco;
     }
 
-    public boolean isFirstRun() {
-        return firstRun;
-    }
-
-    public void setNotFirstRun() {
-        firstRun = false;
-        save();
+    public boolean isVisualiserRunning() {
+        return visualiser;
     }
 
     public Locomotion getLocomotion() {
@@ -89,6 +85,16 @@ public class PFConfig extends JsonFile {
         footwear = !footwear;
         save();
         return footwear;
+    }
+
+    public boolean isExclusiveMode() {
+        return exclusive;
+    }
+
+    public boolean toggleExclusiveMode() {
+        exclusive = !exclusive;
+        save();
+        return exclusive;
     }
 
     public boolean getEnabledMP() {

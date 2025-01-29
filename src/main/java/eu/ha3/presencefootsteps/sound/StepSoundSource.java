@@ -5,6 +5,7 @@ import net.minecraft.world.entity.LivingEntity;
 import eu.ha3.presencefootsteps.PresenceFootsteps;
 import eu.ha3.presencefootsteps.sound.generator.Locomotion;
 import eu.ha3.presencefootsteps.sound.generator.StepSoundGenerator;
+import net.minecraft.world.entity.player.Player;
 
 public interface StepSoundSource {
     Optional<StepSoundGenerator> getStepGenerator(SoundEngine engine);
@@ -34,7 +35,11 @@ public interface StepSoundSource {
 
         @Override
         public boolean isStepBlocked() {
-            return PresenceFootsteps.getInstance().engine.isEnabledFor(entity);
+            SoundEngine engine = PresenceFootsteps.getInstance().engine;
+            if (!engine.getConfig().isExclusiveMode() && !(entity instanceof Player)) {
+                return false;
+            }
+            return engine.isEnabledFor(entity) && getStepGenerator(engine).isPresent();
         }
     }
 }

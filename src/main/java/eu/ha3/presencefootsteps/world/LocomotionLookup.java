@@ -1,5 +1,6 @@
 package eu.ha3.presencefootsteps.world;
 
+import com.google.gson.JsonElement;
 import eu.ha3.presencefootsteps.PFConfig;
 import eu.ha3.presencefootsteps.PresenceFootsteps;
 import eu.ha3.presencefootsteps.sound.generator.Locomotion;
@@ -34,14 +35,14 @@ public class LocomotionLookup implements Index<Entity, Locomotion> {
     }
 
     @Override
-    public void add(String key, String value) {
-        ResourceLocation id = new ResourceLocation(key);
+    public void add(String key, JsonElement value) {
+        ResourceLocation id = ResourceLocation.parse(key);
 
         if (!BuiltInRegistries.ENTITY_TYPE.containsKey(id)) {
             PresenceFootsteps.logger.warn("Locomotion registered for unknown entity type " + id);
         }
 
-        values.put(id, Locomotion.byName(value.toUpperCase()));
+        values.put(id, Locomotion.byName(value.getAsString().toUpperCase()));
     }
 
     @Override

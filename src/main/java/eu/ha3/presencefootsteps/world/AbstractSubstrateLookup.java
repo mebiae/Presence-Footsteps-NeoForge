@@ -2,6 +2,8 @@ package eu.ha3.presencefootsteps.world;
 
 import java.util.Map;
 import java.util.Set;
+
+import com.google.gson.JsonElement;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.Nullable;
 
@@ -13,7 +15,10 @@ abstract class AbstractSubstrateLookup<T> implements Lookup<T> {
     protected abstract ResourceLocation getId(T key);
 
     @Override
-    public SoundsKey getAssociation(T key, String substrate) {
+    public SoundsKey getAssociation(@Nullable T key, String substrate) {
+        if (key == null) {
+            return SoundsKey.UNASSIGNED;
+        }
         final ResourceLocation id = getId(key);
         return getSubstrateMap(id, substrate).getOrDefault(id, SoundsKey.UNASSIGNED);
     }
@@ -42,14 +47,14 @@ abstract class AbstractSubstrateLookup<T> implements Lookup<T> {
     }
 
     @Override
-    public void add(String key, String value) {
+    public void add(String key, JsonElement value) {
         final String[] split = key.trim().split("@");
         final String primitive = split[0];
         final String substrate = split.length > 1 ? split[1] : Substrates.DEFAULT;
 
         substrates
-            .computeIfAbsent(substrate, s -> new Object2ObjectLinkedOpenHashMap<>())
-            .put(new ResourceLocation(primitive), SoundsKey.of(value));
+                .computeIfAbsent(substrate, s -> new Object2ObjectLinkedOpenHashMap<>())
+                .put(ResourceLocation.parse(primitive), SoundsKey.of(value.getAsString()));
     }
 
     @Override

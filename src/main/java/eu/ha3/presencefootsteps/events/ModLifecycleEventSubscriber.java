@@ -2,30 +2,27 @@ package eu.ha3.presencefootsteps.events;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import eu.ha3.presencefootsteps.PFConfig;
+import eu.ha3.presencefootsteps.PFDebugHud;
 import eu.ha3.presencefootsteps.PresenceFootsteps;
 import eu.ha3.presencefootsteps.sound.SoundEngine;
 import net.minecraft.client.KeyMapping;
-import net.minecraftforge.client.event.RegisterClientReloadListenersEvent;
-import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
-import net.minecraftforge.common.util.Lazy;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.event.lifecycle.FMLConstructModEvent;
-import net.minecraftforge.fml.loading.FMLPaths;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
+import net.neoforged.fml.loading.FMLPaths;
+import net.neoforged.neoforge.client.event.RegisterClientReloadListenersEvent;
+import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
+import net.neoforged.neoforge.common.util.Lazy;
 import org.lwjgl.glfw.GLFW;
 
 import java.nio.file.Path;
 
 import static eu.ha3.presencefootsteps.PresenceFootsteps.logger;
 
-@Mod.EventBusSubscriber(modid = PresenceFootsteps.MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD)
+@EventBusSubscriber(modid = PresenceFootsteps.MOD_ID, bus = EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
 public class ModLifecycleEventSubscriber {
     private static final PresenceFootsteps presenceFootsteps = PresenceFootsteps.getInstance();
-
-    @SubscribeEvent
-    public static void onConstruct(final FMLConstructModEvent event) {
-        logger.info("Presence Footsteps starting");
-    }
 
     @SubscribeEvent
     public static void onRegisterClientReloadListeners(final RegisterClientReloadListenersEvent event) {
@@ -38,14 +35,17 @@ public class ModLifecycleEventSubscriber {
 
     @SubscribeEvent
     public static void registerKeyBinding(final RegisterKeyMappingsEvent event) {
-        presenceFootsteps.keyBinding = Lazy.of(() ->
+        presenceFootsteps.optionsKeyBinding = Lazy.of(() ->
                 new KeyMapping("key.presencefootsteps.settings", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_F10, "key.categories.misc"));
+        presenceFootsteps.toggleKeyBinding = Lazy.of(() ->
+                new KeyMapping("key.presencefootsteps.toggle", InputConstants.Type.KEYSYM, InputConstants.UNKNOWN.getValue(), "key.categories.misc"));
 
-        event.register(presenceFootsteps.keyBinding.get());
+        event.register(presenceFootsteps.optionsKeyBinding.get());
+        event.register(presenceFootsteps.toggleKeyBinding.get());
     }
 
-//    @SubscribeEvent
-//    public static void onInitializeClient(final FMLClientSetupEvent event) {
-//        presenceFootsteps.debugHud = new PFDebugHud(presenceFootsteps.engine);
-//    }
+    @SubscribeEvent
+    public static void onInitializeClient(final FMLClientSetupEvent event) {
+        presenceFootsteps.debugHud = new PFDebugHud(presenceFootsteps.engine);
+    }
 }

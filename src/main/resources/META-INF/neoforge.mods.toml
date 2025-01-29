@@ -5,7 +5,7 @@ issueTrackerURL = ""
 
 [[mods]]
 modId = "presencefootsteps"
-version = "${version}"
+version = "${mod_version}"
 displayName = "Presence Footsteps (NeoForge)"
 displayURL = ""
 updateJSONURL = ""
