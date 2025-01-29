@@ -14,20 +14,18 @@ import net.minecraft.network.protocol.game.ClientboundSoundPacket;
 @Mixin(ClientPacketListener.class)
 public abstract class MClientPlayNetworkHandler implements ClientGamePacketListener {
 
-    // todo: fix this for support with the Create mod
-//    @Inject(method = "onPlaySound(Lnet/minecraft/network/packet/s2c/play/PlaySoundS2CPacket;)V",
-//            at = @At(value = "INVOKE", target = "net/minectaft/client/ClientWorld.playSound("
-//                        + "Lnet/minecraft/entity/player/PlayerEntity;"
-//                        + "DDD"
-//                        + "Lnet/minecraft/registry/entry/RegistryEntry;"
-//                        + "Lnet/minecraft/sound/SoundCategory;"
-//                        + "FFJ"
-//                    + ")V",
-//                    shift = Shift.BEFORE
-//            ),
-//            cancellable = true
-//    )
-    @Inject(method = "handleSoundEvent(Lnet/minecraft/network/protocol/game/ClientboundSoundPacket;)V", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "handleSoundEvent(Lnet/minecraft/network/protocol/game/ClientboundSoundPacket;)V",
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/ClientLevel;playSeededSound(" +
+                    "Lnet/minecraft/world/entity/player/Player;" +
+                    "DDD" +
+                    "Lnet/minecraft/core/Holder;" +
+                    "Lnet/minecraft/sounds/SoundSource;" +
+                    "FFJ" +
+                    ")V",
+                    shift = Shift.BEFORE
+            ),
+            cancellable = true
+    )
     public void onHandleSoundEffect(ClientboundSoundPacket packet, CallbackInfo info) {
         if (PresenceFootsteps.getInstance().engine.onSoundRecieved(packet.getSound(), packet.getSource())) {
             info.cancel();

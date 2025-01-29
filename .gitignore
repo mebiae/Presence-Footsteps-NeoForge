@@ -2,7 +2,7 @@
 .settings/
 bin/
 build/
-run/
+runs/
 .classpath
 .project
 *.launch

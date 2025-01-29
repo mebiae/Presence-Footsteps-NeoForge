@@ -2,6 +2,9 @@ package eu.ha3.presencefootsteps.sound;
 
 import java.io.IOException;
 import java.util.Map;
+
+import eu.ha3.presencefootsteps.PresenceFootsteps;
+import eu.ha3.presencefootsteps.world.*;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.sounds.SoundEvent;
@@ -18,13 +21,6 @@ import eu.ha3.presencefootsteps.sound.player.DelayedSoundPlayer;
 import eu.ha3.presencefootsteps.util.JsonObjectWriter;
 import eu.ha3.presencefootsteps.util.ResourceUtils;
 import eu.ha3.presencefootsteps.util.BlockReport.Reportable;
-import eu.ha3.presencefootsteps.world.GolemLookup;
-import eu.ha3.presencefootsteps.world.HeuristicStateLookup;
-import eu.ha3.presencefootsteps.world.Index;
-import eu.ha3.presencefootsteps.world.LocomotionLookup;
-import eu.ha3.presencefootsteps.world.Lookup;
-import eu.ha3.presencefootsteps.world.PrimitiveLookup;
-import eu.ha3.presencefootsteps.world.StateLookup;
 
 public record Isolator (
         Variator variator,
@@ -32,15 +28,17 @@ public record Isolator (
         HeuristicStateLookup heuristics,
         Lookup<EntityType<?>> golems,
         Lookup<BlockState> blocks,
+        Index<ResourceLocation, BiomeVarianceLookup.BiomeVariance> biomes,
         Lookup<SoundEvent> primitives,
         AcousticLibrary acoustics
-    ) implements Reportable {
-    private static final ResourceLocation BLOCK_MAP = new ResourceLocation("presencefootsteps", "config/blockmap.json");
-    private static final ResourceLocation GOLEM_MAP = new ResourceLocation("presencefootsteps", "config/golemmap.json");
-    private static final ResourceLocation LOCOMOTION_MAP = new ResourceLocation("presencefootsteps", "config/locomotionmap.json");
-    private static final ResourceLocation PRIMITIVE_MAP = new ResourceLocation("presencefootsteps", "config/primitivemap.json");
-    public static final ResourceLocation ACOUSTICS = new ResourceLocation("presencefootsteps", "config/acoustics.json");
-    private static final ResourceLocation VARIATOR = new ResourceLocation("presencefootsteps", "config/variator.json");
+) implements Reportable {
+    private static final ResourceLocation BLOCK_MAP = PresenceFootsteps.id("config/blockmap.json");
+    private static final ResourceLocation BIOME_MAP = PresenceFootsteps.id("config/biomevariancemap.json");
+    private static final ResourceLocation GOLEM_MAP = PresenceFootsteps.id("config/golemmap.json");
+    private static final ResourceLocation LOCOMOTION_MAP = PresenceFootsteps.id("config/locomotionmap.json");
+    private static final ResourceLocation PRIMITIVE_MAP = PresenceFootsteps.id("config/primitivemap.json");
+    public static final ResourceLocation ACOUSTICS = PresenceFootsteps.id("config/acoustics.json");
+    private static final ResourceLocation VARIATOR = PresenceFootsteps.id("config/variator.json");
 
     public Isolator(SoundEngine engine) {
         this(new Variator(),
@@ -48,6 +46,7 @@ public record Isolator (
                 new HeuristicStateLookup(),
                 new GolemLookup(),
                 new StateLookup(),
+                new BiomeVarianceLookup(),
                 new PrimitiveLookup(),
                 new AcousticsPlayer(new DelayedSoundPlayer(engine.soundPlayer))
         );
@@ -55,7 +54,8 @@ public record Isolator (
 
     public boolean load(ResourceManager manager) {
         boolean hasConfigurations = false;
-        hasConfigurations |= ResourceUtils.forEachReverse(BLOCK_MAP, manager, blocks()::load);
+        hasConfigurations |= ResourceUtils.forEach(BLOCK_MAP, manager, blocks()::load);
+        hasConfigurations |= ResourceUtils.forEach(BIOME_MAP, manager, biomes()::load);
         hasConfigurations |= ResourceUtils.forEach(GOLEM_MAP, manager, golems()::load);
         hasConfigurations |= ResourceUtils.forEach(PRIMITIVE_MAP, manager, primitives()::load);
         hasConfigurations |= ResourceUtils.forEach(LOCOMOTION_MAP, manager, locomotions()::load);

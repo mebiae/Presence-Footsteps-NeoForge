@@ -9,6 +9,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.stream.Stream;
 
+import eu.ha3.presencefootsteps.PresenceFootsteps;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.PreparableReloadListener;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -41,7 +43,7 @@ import net.minecraft.world.entity.vehicle.AbstractMinecart;
 import net.minecraft.world.entity.vehicle.Boat;
 
 public class SoundEngine implements PreparableReloadListener {
-    //private static final ResourceLocation ID = new ResourceLocation("presencefootsteps", "sounds");
+    private static final ResourceLocation ID = PresenceFootsteps.id("sounds");
 
     private Isolator isolator = new Isolator(this);
     private final Solver solver = new PFSolver(this);
@@ -118,15 +120,15 @@ public class SoundEngine implements PreparableReloadListener {
                     && !(e instanceof WaterAnimal)
                     && !(e instanceof FlyingMob)
                     && !(e instanceof Shulker
-                            || e instanceof ArmorStand
-                            || e instanceof Boat
-                            || e instanceof AbstractMinecart)
-                        && !isolator.golems().contains(e.getType())
-                        && !e.isPassenger()
-                        && !((LivingEntity)e).isSleeping()
-                        && (!(e instanceof Player) || !e.isSpectator())
-                        && e.distanceToSqr(cameraEntity) <= 256
-                        && config.getEntitySelector().test(e);
+                    || e instanceof ArmorStand
+                    || e instanceof Boat
+                    || e instanceof AbstractMinecart)
+                    && !isolator.golems().contains(e.getType())
+                    && !e.isPassenger()
+                    && !((LivingEntity)e).isSleeping()
+                    && (!(e instanceof Player) || !e.isSpectator())
+                    && e.distanceToSqr(cameraEntity) <= 256
+                    && config.getEntitySelector().test(e);
         });
 
         final Comparator<Entity> nearest = Comparator.comparingDouble(e -> e.distanceToSqr(cameraEntity));
@@ -136,10 +138,10 @@ public class SoundEngine implements PreparableReloadListener {
         }
         Set<Integer> alreadyVisited = new HashSet<>();
         return entities.stream()
-            .sorted(nearest)
-                    // Always play sounds for players and the entities closest to the camera
-                        // If multiple entities share the same block, only play sounds for one of each distinct type
-            .filter(e -> e == cameraEntity || e instanceof Player || (alreadyVisited.size() < config.getMaxSteppingEntities() && alreadyVisited.add(Objects.hash(e.getType(), e.blockPosition()))));
+                .sorted(nearest)
+                // Always play sounds for players and the entities closest to the camera
+                // If multiple entities share the same block, only play sounds for one of each distinct type
+                .filter(e -> e == cameraEntity || e instanceof Player || (alreadyVisited.size() < config.getMaxSteppingEntities() && alreadyVisited.add(Objects.hash(e.getType(), e.blockPosition()))));
     }
 
     public void onFrame(Minecraft client, Entity cameraEntity) {
@@ -169,41 +171,18 @@ public class SoundEngine implements PreparableReloadListener {
     }
 
     public boolean onSoundRecieved(@Nullable Holder<SoundEvent> event, SoundSource category) {
-        if (event == null || !isRunning(Minecraft.getInstance())) {
-            return false;
-        }
-
-        if (config.getEntitySelector() == EntitySelector.PLAYERS_ONLY && category != SoundSource.PLAYERS) {
-            return false;
-        }
-
-        if (config.getEntitySelector() == EntitySelector.PLAYERS_AND_HOSTILES && category != SoundSource.PLAYERS && category != SoundSource.HOSTILE) {
-            return false;
-        }
-
-        if (config.getEntitySelector() == EntitySelector.ALL && category != SoundSource.PLAYERS && category != SoundSource.HOSTILE && category != SoundSource.NEUTRAL) {
-            return false;
-        }
-
-        return event.unwrap().right().filter(sound -> {
-            if (event == SoundEvents.PLAYER_SWIM
-                || event == SoundEvents.PLAYER_SPLASH
-                || event == SoundEvents.PLAYER_BIG_FALL
-                || event == SoundEvents.PLAYER_SMALL_FALL) {
-                return true;
-            }
-
-            String[] name = sound.getLocation().getPath().split("\\.");
-            return name.length > 0
-                    && "block".contentEquals(name[0])
-                    && "step".contentEquals(name[name.length - 1]);
+        return event != null && isRunning(Minecraft.getInstance()) && event.unwrap().right().filter(sound -> {
+            return event == SoundEvents.PLAYER_SWIM
+                    || event == SoundEvents.PLAYER_SPLASH
+                    || event == SoundEvents.PLAYER_BIG_FALL
+                    || event == SoundEvents.PLAYER_SMALL_FALL;
         }).isPresent();
     }
 
     @Override
-    public @NotNull CompletableFuture<Void> reload(PreparationBarrier sync, ResourceManager sender,
-                                                   ProfilerFiller serverProfiler, ProfilerFiller clientProfiler,
-                                                   Executor serverExecutor, Executor clientExecutor) {
+    public CompletableFuture<Void> reload(PreparationBarrier sync, ResourceManager sender,
+                                          ProfilerFiller serverProfiler, ProfilerFiller clientProfiler,
+                                          Executor serverExecutor, Executor clientExecutor) {
         return sync.wait(null).thenRunAsync(() -> {
             clientProfiler.startTick();
             clientProfiler.push("Reloading PF Sounds");

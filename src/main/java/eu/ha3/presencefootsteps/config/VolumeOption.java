@@ -1,6 +1,8 @@
 package eu.ha3.presencefootsteps.config;
 
 import java.lang.reflect.Type;
+
+import com.kirin.common.client.gui.IField.IChangeCallback;
 import net.minecraft.util.Mth;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
@@ -8,9 +10,8 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
-//import com.minelittlepony.common.client.gui.IField.IChangeCallback;
 
-public class VolumeOption {//implements IChangeCallback<Float> {
+public class VolumeOption implements IChangeCallback<Float> {
 
     private transient final JsonFile config;
 
@@ -35,10 +36,10 @@ public class VolumeOption {//implements IChangeCallback<Float> {
         return get();
     }
 
-//    @Override
-//    public Float perform(Float value) {
-//        return set(value);
-//    }
+    @Override
+    public Float perform(Float value) {
+        return set(value);
+    }
 
     @Override
     public String toString() {

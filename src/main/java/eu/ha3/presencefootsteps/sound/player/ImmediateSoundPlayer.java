@@ -1,6 +1,9 @@
 package eu.ha3.presencefootsteps.sound.player;
 
 import java.util.Random;
+
+import eu.ha3.presencefootsteps.sound.StepSoundSource;
+import eu.ha3.presencefootsteps.sound.generator.StepSoundGenerator;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.client.resources.sounds.SoundInstance;
@@ -40,6 +43,13 @@ public final class ImmediateSoundPlayer implements SoundPlayer {
         volume *= engine.getVolumeForSource(location);
         pitch /= ((PlayerUtil.getScale(location) - 1) * 0.6F) + 1;
 
+        StepSoundGenerator generator = ((StepSoundSource) location).getStepGenerator(engine).orElse(null);
+        if (generator != null) {
+            float tickDelta = mc.getTimer().getGameTimeDeltaPartialTick(false);
+            volume *= generator.getLocalVolume(tickDelta);
+            pitch *= generator.getLocalPitch(tickDelta);
+        }
+
         SimpleSoundInstance sound = new UncappedSoundInstance(soundName, volume, pitch, location);
 
         if (distance > 100) {
@@ -67,7 +77,7 @@ public final class ImmediateSoundPlayer implements SoundPlayer {
 
         private static ResourceLocation getSoundId(String name, Entity location) {
             if (name.indexOf(':') >= 0) {
-                return new ResourceLocation(name);
+                return ResourceLocation.parse(name);
             }
 
             String domain = "presencefootsteps";
@@ -76,7 +86,7 @@ public final class ImmediateSoundPlayer implements SoundPlayer {
                 domain += "mono"; // Switch to mono if playing another player
             }
 
-            return new ResourceLocation(domain, name);
+            return ResourceLocation.fromNamespaceAndPath(domain, name);
         }
     }
 }

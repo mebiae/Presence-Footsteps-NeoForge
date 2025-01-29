@@ -14,7 +14,7 @@ public class HeuristicStateLookup {
         String id = BuiltInRegistries.BLOCK.getKey(block).getPath();
 
         for (String part : id.split("_")) {
-            Optional<Block> leavesBlock = BuiltInRegistries.BLOCK.getOptional(new ResourceLocation(part + "_leaves"));
+            Optional<Block> leavesBlock = BuiltInRegistries.BLOCK.getOptional(ResourceLocation.parse(part + "_leaves"));
             if (leavesBlock.isPresent()) {
                 return leavesBlock;
             }
@@ -25,7 +25,7 @@ public class HeuristicStateLookup {
 
     @Nullable
     public Block getMostSimilar(Block block) {
-        if (block.getSoundType(block.defaultBlockState()).getStepSound() == SoundEvents.GRASS_STEP) {
+        if (block.defaultBlockState().getSoundType().getStepSound() == SoundEvents.GRASS_STEP) {
             return leafBlockCache.apply(block).orElse(null);
         }
         return null;

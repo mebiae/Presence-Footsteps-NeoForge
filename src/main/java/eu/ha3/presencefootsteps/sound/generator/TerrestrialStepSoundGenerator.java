@@ -1,5 +1,11 @@
 package eu.ha3.presencefootsteps.sound.generator;
 
+import com.google.common.base.MoreObjects;
+import eu.ha3.presencefootsteps.util.Lerp;
+import eu.ha3.presencefootsteps.world.*;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.tags.FluidTags;
+import net.minecraft.world.entity.animal.horse.Horse;
 import org.jetbrains.annotations.Nullable;
 
 import eu.ha3.presencefootsteps.config.Variator;
@@ -8,11 +14,6 @@ import eu.ha3.presencefootsteps.sound.State;
 import eu.ha3.presencefootsteps.util.PlayerUtil;
 import eu.ha3.presencefootsteps.sound.Options;
 import eu.ha3.presencefootsteps.sound.SoundEngine;
-import eu.ha3.presencefootsteps.world.Association;
-import eu.ha3.presencefootsteps.world.AssociationPool;
-import eu.ha3.presencefootsteps.world.Solver;
-import eu.ha3.presencefootsteps.world.SoundsKey;
-import eu.ha3.presencefootsteps.world.Substrates;
 import net.minecraft.client.player.RemotePlayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -54,11 +55,24 @@ class TerrestrialStepSoundGenerator implements StepSoundGenerator {
     protected final MotionTracker motionTracker = new MotionTracker(this);
     protected final AssociationPool associations;
 
+    private final Lerp biomePitch = new Lerp();
+    private final Lerp biomeVolume = new Lerp();
+
     public TerrestrialStepSoundGenerator(LivingEntity entity, SoundEngine engine, Modifier<TerrestrialStepSoundGenerator> modifier) {
         this.entity = entity;
         this.engine = engine;
         this.modifier = modifier;
         this.associations = new AssociationPool(entity, engine);
+    }
+
+    @Override
+    public float getLocalPitch(float tickDelta) {
+        return biomePitch.get(tickDelta);
+    }
+
+    @Override
+    public float getLocalVolume(float tickDelta) {
+        return biomeVolume.get(tickDelta);
     }
 
     @Override
@@ -68,6 +82,13 @@ class TerrestrialStepSoundGenerator implements StepSoundGenerator {
 
     @Override
     public void generateFootsteps() {
+        BiomeVarianceLookup.BiomeVariance variance = entity.level().getBiome(entity.blockPosition()).unwrapKey().map(ResourceKey::location).map(key -> {
+            return engine.getIsolator().biomes().lookup(key);
+        }).orElse(BiomeVarianceLookup.BiomeVariance.DEFAULT);
+
+        biomePitch.update(variance.pitch(), 0.01F);
+        biomeVolume.update(variance.volume(), 0.01F);
+
         motionTracker.simulateMotionData(entity);
         simulateFootsteps();
         simulateAirborne();
@@ -80,7 +101,7 @@ class TerrestrialStepSoundGenerator implements StepSoundGenerator {
         if (isImmobile && (entity.onGround() || !entity.isUnderWater()) && playbackImmobile()) {
             Association assos = associations.findAssociation(0d, isRightFoot);
 
-            if (!assos.isSilent() || !isImmobile) {
+            if (assos.isResult() && (!assos.isSilent() || !isImmobile)) {
                 playStep(assos, State.STAND);
             }
         }
@@ -177,7 +198,7 @@ class TerrestrialStepSoundGenerator implements StepSoundGenerator {
             }
 
             // Fix high speed footsteps (i.e. horse riding)
-            if (motionTracker.getHorizontalSpeed() > 0.1) {
+            if ((entity instanceof Horse) && motionTracker.getHorizontalSpeed() > 0.1) {
                 distance *= 3;
             }
 
@@ -212,11 +233,12 @@ class TerrestrialStepSoundGenerator implements StepSoundGenerator {
 
         if (hasStoppingConditions()) {
             float volume = Math.min(1, (float) entity.getDeltaMovement().length() * 0.35F);
-            Options options = Options.singular("gliding_volume", volume);
-            State state = entity.isUnderWater() ? State.SWIM : event;
 
-            engine.getIsolator().acoustics().playAcoustic(entity, SoundsKey.SWIM, state, options);
-
+            engine.getIsolator().acoustics().playAcoustic(entity,
+                    entity.isInWater() ? SoundsKey.SWIM_WATER : SoundsKey.SWIM_LAVA,
+                    (entity.isUnderWater() || entity.isEyeInFluid(FluidTags.LAVA)) ? State.SWIM : event,
+                    Options.singular("gliding_volume", volume)
+            );
             playStep(associations.findAssociation(entity.blockPosition().below(), Solver.MESSY_FOLIAGE_STRATEGY), event);
         } else {
             if (!entity.isDiscrete() || event.isExtraLoud()) {
@@ -229,7 +251,7 @@ class TerrestrialStepSoundGenerator implements StepSoundGenerator {
     }
 
     protected boolean hasStoppingConditions() {
-        return entity.isInWater();
+        return entity.isInWater() || entity.isInLava();
     }
 
     protected void simulateAirborne() {
@@ -308,9 +330,9 @@ class TerrestrialStepSoundGenerator implements StepSoundGenerator {
         }
 
         Association assos = associations.findAssociation(BlockPos.containing(
-            entity.getX(),
-            entity.getY() - 0.1D - (entity.isPassenger() ? entity.getMyRidingOffset(entity.getVehicle()) : 0) - (entity.onGround() ? 0 : 0.25D),
-            entity.getZ()
+                entity.getX(),
+                MoreObjects.firstNonNull(entity.getRootVehicle(), entity).getY() - 0.1D - (entity.onClimbable() ? 0 : 0.25D),
+                entity.getZ()
         ), Solver.MESSY_FOLIAGE_STRATEGY);
 
         if (!assos.isSilent()) {
@@ -326,7 +348,7 @@ class TerrestrialStepSoundGenerator implements StepSoundGenerator {
     protected void playStep(Association association, State eventType) {
         if (engine.getConfig().getEnabledFootwear()) {
             if (entity.getItemBySlot(EquipmentSlot.FEET).getItem() instanceof ArmorItem bootItem) {
-                SoundsKey bootSound = engine.getIsolator().primitives().getAssociation(bootItem.getEquipSound(), Substrates.DEFAULT);
+                SoundsKey bootSound = engine.getIsolator().primitives().getAssociation(bootItem.getEquipSound().value(), Substrates.DEFAULT);
                 if (bootSound.isEmitter()) {
                     engine.getIsolator().acoustics().playStep(association, eventType, Options.singular("volume_percentage", 0.5F));
                     engine.getIsolator().acoustics().playAcoustic(entity, bootSound, eventType, Options.EMPTY);

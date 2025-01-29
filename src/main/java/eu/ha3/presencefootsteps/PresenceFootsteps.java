@@ -6,19 +6,26 @@ import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.toasts.SystemToast;
 import net.minecraft.network.chat.Component;
-import net.minecraftforge.common.util.Lazy;
-import net.minecraftforge.fml.common.Mod;
+import net.minecraft.resources.ResourceLocation;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.fml.ModContainer;
+import net.neoforged.fml.common.Mod;
+import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
+import net.neoforged.neoforge.common.util.Lazy;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 
-@Mod(PresenceFootsteps.MOD_ID)
+@Mod(value = PresenceFootsteps.MOD_ID, dist = Dist.CLIENT)
 public class PresenceFootsteps {
     public static final Logger logger = LogManager.getLogger("PFSolver");
-
     public static final String MOD_ID = "presencefootsteps";
 
     public static final Component MOD_NAME = Component.translatable("mod.presencefootsteps.name");
+
+    public static ResourceLocation id(String  name) {
+        return ResourceLocation.fromNamespaceAndPath(MOD_ID, name);
+    }
 
     private static PresenceFootsteps instance;
 
@@ -30,11 +37,18 @@ public class PresenceFootsteps {
 
     public PFConfig config;
 
-    @Nullable
-    public Lazy<KeyMapping> keyBinding = null;
+    public PFDebugHud debugHud;
 
-    public PresenceFootsteps() {
+    @Nullable
+    public Lazy<KeyMapping> optionsKeyBinding = null;
+    @Nullable
+    public Lazy<KeyMapping> toggleKeyBinding = null;
+    public boolean toggleTriggered;
+
+    public PresenceFootsteps(ModContainer modContainer) {
         instance = this;
+
+        modContainer.registerExtensionPoint(IConfigScreenFactory.class, (mc, screen) -> new PFOptionsScreen(screen));
     }
 
     void onEnabledStateChange(boolean enabled) {
