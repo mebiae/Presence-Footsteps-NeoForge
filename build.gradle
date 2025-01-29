@@ -20,7 +20,7 @@ repositories {
 }
 
 base {
-    archivesName = 'PresenceFootsteps'
+    archivesName = name
 }
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(21)
